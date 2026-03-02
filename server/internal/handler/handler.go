@@ -56,6 +56,7 @@ func (s *Server) Router(authMW, rateLimitMW func(http.Handler) http.Handler) htt
 		// Memory CRUD.
 		r.Post("/api/memories", s.createMemory)
 		r.Get("/api/memories", s.listMemories)
+		r.Get("/api/memories/bootstrap", s.bootstrapMemories)
 		r.Post("/api/memories/bulk", s.bulkCreateMemories)
 		r.Get("/api/memories/{id}", s.getMemory)
 		r.Put("/api/memories/{id}", s.updateMemory)
@@ -86,6 +87,8 @@ func (s *Server) handleError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		respondError(w, http.StatusNotFound, err.Error())
+	case errors.Is(err, domain.ErrWriteConflict):
+		respondError(w, http.StatusServiceUnavailable, err.Error())
 	case errors.Is(err, domain.ErrConflict):
 		respondError(w, http.StatusConflict, err.Error())
 	case errors.Is(err, domain.ErrDuplicateKey):

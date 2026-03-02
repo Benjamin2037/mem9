@@ -21,10 +21,17 @@ CREATE TABLE IF NOT EXISTS memories (
   updated_by  VARCHAR(100),
   created_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  vector_clock      JSON         NOT NULL DEFAULT ('{}'),
+  origin_agent      VARCHAR(64),
+  tombstone         TINYINT(1)   NOT NULL DEFAULT 0,
+  last_write_id     VARCHAR(36),
+  last_write_snapshot JSON,
+  last_write_status TINYINT,
   UNIQUE INDEX idx_key    (space_id, key_name),
   INDEX idx_space         (space_id),
   INDEX idx_source        (space_id, source),
-  INDEX idx_updated       (space_id, updated_at)
+  INDEX idx_updated       (space_id, updated_at),
+  INDEX idx_tombstone     (space_id, tombstone)
 );
 
 -- Vector index requires TiFlash. May fail on plain MySQL; safe to ignore.
@@ -41,3 +48,15 @@ CREATE TABLE IF NOT EXISTS memories (
 --   VECTOR INDEX idx_cosine ((VEC_COSINE_DISTANCE(embedding)))
 --
 -- Set MNEMO_EMBED_AUTO_MODEL=tidbcloud_free/amazon/titan-embed-text-v2 to enable.
+
+-- Migration: add CRDT columns to existing memories table.
+-- Existing rows get defaults: vector_clock='{}', tombstone=0, others NULL.
+-- ALTER TABLE memories
+--   ADD COLUMN vector_clock      JSON         NOT NULL DEFAULT ('{}'),
+--   ADD COLUMN origin_agent      VARCHAR(64),
+--   ADD COLUMN tombstone         TINYINT(1)   NOT NULL DEFAULT 0,
+--   ADD COLUMN last_write_id     VARCHAR(36),
+--   ADD COLUMN last_write_snapshot JSON,
+--   ADD COLUMN last_write_status TINYINT;
+-- CREATE INDEX idx_tombstone ON memories(space_id, tombstone);
+-- CREATE UNIQUE INDEX idx_last_write_id ON memories(space_id, last_write_id);

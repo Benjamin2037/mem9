@@ -7,19 +7,32 @@ import (
 
 // Memory represents a piece of shared knowledge stored in a space.
 type Memory struct {
-	ID        string            `json:"id"`
-	SpaceID   string            `json:"-"`
-	Content   string            `json:"content"`
-	KeyName   string            `json:"key,omitempty"`
-	Source    string            `json:"source,omitempty"`
-	Tags      []string          `json:"tags,omitempty"`
-	Metadata  json.RawMessage   `json:"metadata,omitempty"`
-	Embedding []float32         `json:"-"`
-	Version   int               `json:"version"`
-	UpdatedBy string            `json:"updated_by,omitempty"`
-	CreatedAt time.Time         `json:"created_at"`
-	UpdatedAt time.Time         `json:"updated_at"`
-	Score     *float64          `json:"score,omitempty"`
+	ID        string          `json:"id"`
+	SpaceID   string          `json:"-"`
+	Content   string          `json:"content"`
+	KeyName   string          `json:"key,omitempty"`
+	Source    string          `json:"source,omitempty"`
+	Tags      []string        `json:"tags,omitempty"`
+	Metadata  json.RawMessage `json:"metadata,omitempty"`
+	Embedding []float32       `json:"-"`
+	Version   int             `json:"version"`
+	UpdatedBy string          `json:"updated_by,omitempty"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
+	Score     *float64        `json:"score,omitempty"`
+
+	VectorClock map[string]uint64 `json:"clock,omitempty"`
+	OriginAgent string            `json:"origin_agent,omitempty"`
+	Tombstone   bool              `json:"tombstone"`
+	WriteID     string            `json:"-"`
+}
+
+// WriteResult is returned by the service layer to the handler for CRDT-aware writes.
+// It is never serialized directly to the HTTP response body.
+type WriteResult struct {
+	Memory    *Memory
+	Dominated bool   // true when incoming write lost to existing
+	Winner    string // origin_agent of the winning record
 }
 
 // SpaceToken maps an API token to a space and identifies an agent.
