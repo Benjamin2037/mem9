@@ -16,13 +16,15 @@ import (
 	"github.com/qiffang/mnemos/server/internal/embed"
 	"github.com/qiffang/mnemos/server/internal/llm"
 	"github.com/qiffang/mnemos/server/internal/middleware"
+	"github.com/qiffang/mnemos/server/internal/repository"
 	"github.com/qiffang/mnemos/server/internal/repository/tidb"
 	"github.com/qiffang/mnemos/server/internal/service"
 )
 
 // Server holds the HTTP handlers and their dependencies.
 type Server struct {
-	tenant *service.TenantService
+	tenant      *service.TenantService
+	uploadTasks repository.UploadTaskRepo
 	// Dependencies for creating tenant-mode services on-the-fly.
 	embedder   *embed.Embedder
 	llmClient  *llm.Client
@@ -35,6 +37,7 @@ type Server struct {
 // NewServer creates a new HTTP handler server.
 func NewServer(
 	tenantSvc *service.TenantService,
+	uploadTasks repository.UploadTaskRepo,
 	embedder *embed.Embedder,
 	llmClient *llm.Client,
 	autoModel string,
@@ -42,12 +45,13 @@ func NewServer(
 	logger *slog.Logger,
 ) *Server {
 	return &Server{
-		tenant:     tenantSvc,
-		embedder:   embedder,
-		llmClient:  llmClient,
-		autoModel:  autoModel,
-		ingestMode: ingestMode,
-		logger:     logger,
+		tenant:      tenantSvc,
+		uploadTasks: uploadTasks,
+		embedder:    embedder,
+		llmClient:   llmClient,
+		autoModel:   autoModel,
+		ingestMode:  ingestMode,
+		logger:      logger,
 	}
 }
 
@@ -119,6 +123,10 @@ func (s *Server) Router(tenantMW, rateLimitMW func(http.Handler) http.Handler) h
 		r.Put("/memories/{id}", s.updateMemory)
 		r.Delete("/memories/{id}", s.deleteMemory)
 		r.Post("/memories/ingest", s.ingestMemories)
+
+		// File upload (async ingest).
+		r.Post("/memories/upload", s.uploadFile)
+		r.Get("/memories/upload/status", s.uploadStatus)
 
 		// Tenant info.
 		r.Get("/info", s.getTenantInfo)
