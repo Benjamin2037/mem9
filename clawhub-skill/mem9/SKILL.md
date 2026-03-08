@@ -90,7 +90,10 @@ Use this distinction consistently:
 |---------------|-------------------------|
 | `tenantID` | Internal plugin config field; do not surface this to users unless editing config |
 | `SPACE_ID` env var | A local variable holding the user's mem9 space ID |
+| `token` | Treat as the same value as the mem9 space ID unless the user clearly means something else |
 | "recovery key" | Avoid this term; say "space ID" instead |
+
+Short rule: `space ID`, `tenantID`, and `token` may refer to the same mem9 identifier. Prefer saying `space ID` to users, and use `tenantID` only in config examples.
 
 If the user asks "What is this for?" answer plainly:
 
@@ -100,7 +103,40 @@ If the user asks "What is the relationship between tenantID and key?" answer pla
 
 > You only need the space ID. That is the value you save and reuse later to reconnect to the same cloud memory. `tenantID` is just the internal plugin config field name for that value.
 
+### Step 0 — Check for existing space
+
+`[AGENT]` Ask the user before doing anything else:
+
+> Do you already have a mem9 space ID from a previous install or another machine?
+
+**If yes** — ask the user to paste the ID, save it as `SPACE_ID`, then skip to Step 2.
+
+```
+SPACE_ID="<paste-from-user>"
+```
+
+When the user provides an existing ID, verify it is reachable before continuing:
+
+```bash
+curl -sf "https://api.mem9.ai/v1alpha1/mem9s/$SPACE_ID/memories?limit=1" \
+  && echo "OK" || echo "UNREACHABLE"
+```
+
+If the check returns `OK`, say:
+
+> Connected to your existing cloud memory space. Continuing setup with your space ID.
+
+If the check fails, say:
+
+> That ID did not respond. Double-check the value and try again, or create a new space instead.
+
+**If no** — proceed to Step 1 to provision a new space.
+
+---
+
 ### Step 1 — Provision tenant
+
+> Skip this step if the user provided an existing space ID in Step 0.
 
 `[AGENT]`
 
@@ -129,7 +165,21 @@ When explaining it to the user, say:
 openclaw plugins install @mem9/mem9
 ```
 
-### Step 3 — Configure openclaw.json
+### Step 3 — Detect OpenClaw version
+
+`[AGENT]` Check the installed OpenClaw version before editing config:
+
+```bash
+openclaw --version
+```
+
+Routing rule:
+
+- If the reported version is `>= 2.2.0`, use the config path in **Step 4A**.
+- If the reported version is `< 2.2.0`, use the config path in **Step 4B**.
+- If the version command is unavailable or unclear, tell the user you could not determine the OpenClaw version and ask them which version they are using before editing `openclaw.json`.
+
+### Step 4 — Configure openclaw.json
 
 #### OpenClaw ≥2.2.0
 
@@ -182,9 +232,28 @@ jq --arg sid "$SPACE_ID" '
 ' openclaw.json > tmp.json && mv tmp.json openclaw.json
 ```
 
+Or if no `openclaw.json` exists, create:
+
+```json
+{
+  "plugins": {
+    "slots": { "memory": "mem9" },
+    "entries": {
+      "mem9": {
+        "enabled": true,
+        "config": {
+          "apiUrl": "https://api.mem9.ai",
+          "tenantID": "<your-space-id>"
+        }
+      }
+    }
+  }
+}
+```
+
 If result returns stored memory → setup successful.
 
-### Step 4 — What's Next
+### Step 5 — What's Next
 
 `[AGENT]` Print the following to the user:
 
@@ -209,7 +278,7 @@ If result returns stored memory → setup successful.
 
    New machine / re-install:
    1. Install mem9 plugin again
-   2. Put this same ID back into Step 3 config
+   2. Put this same ID back into Step 4 config
    3. Your cloud memories reconnect immediately
 
 📦 BACKUP PLAN
@@ -343,6 +412,7 @@ When user says "import memories to mem9" without specifying files:
 |---------|-----|
 | Plugin not loading | Check `slots.memory = "mem9"` and `entries.mem9.enabled = true` |
 | `404` on API call | Verify the saved space ID was written into the plugin config; run `curl https://api.mem9.ai/healthz` |
+| Existing space ID unreachable | Re-check the value for typos; confirm network access to `api.mem9.ai`; if ID is lost, provision a new space via Step 1 |
 ---
 
 ## Next Steps
@@ -359,12 +429,9 @@ After first read, do this immediately:
 
 ## Update
 
-Check daily (add to heartbeat or cron at 00:00):
+Do not set up automatic daily self-updates for this skill.
 
-```bash
-curl -s https://raw.githubusercontent.com/qiffang/mnemos/main/clawhub-skill/mem9/SKILL.md \
-  -o ~/.openclaw/skills/mem9/SKILL.md
-```
+Only update the local skill file when the user or maintainer explicitly asks for a refresh from a reviewed source.
 
 ---
 
