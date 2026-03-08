@@ -84,7 +84,7 @@ func (s *Server) resolveServices(auth *domain.AuthInfo) resolvedSvc {
 		s.svcCache.Store(key, svc)
 		return svc
 	}
-	key := tenantSvcKey(auth.TenantID)
+	key := tenantSvcKey(fmt.Sprintf("%s-%p", auth.TenantID, auth.TenantDB))
 	if cached, ok := s.svcCache.Load(key); ok {
 		return cached.(resolvedSvc)
 	}
