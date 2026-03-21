@@ -40,11 +40,12 @@ function parseLauncherArgs(argv) {
 
 function promptBlock({ project, session, checkpoint }) {
   if (checkpoint) {
+    const metadata = parseMetadata(checkpoint) || {};
     return [
       `Restore the following shared mem9 checkpoint for project ${project}.`,
       'Reconstruct the working context first, then continue with the user\'s next request.',
       '',
-      checkpoint.content,
+      metadata.checkpoint_content || checkpoint.content,
     ].join('\n');
   }
 

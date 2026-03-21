@@ -95,7 +95,17 @@ cd mnemos/codex-plugin
 node src/launcher.mjs
 ```
 
-This gives Codex shared checkpoint save/recall plus a startup chooser for named or resumed sessions.
+Optional auto-save watcher for `/compact` and `/reset`:
+
+```bash
+cd mnemos/codex-plugin
+node src/install-launch-agent.mjs
+launchctl unload ~/Library/LaunchAgents/com.benjamin2037.codex.mem9-watcher.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.benjamin2037.codex.mem9-watcher.plist
+```
+
+This gives Codex shared checkpoint save/recall, a startup chooser for named or resumed sessions, and automatic imported-session checkpoints when you compact or reset.
+The Codex plugin also keeps the full checkpoint body in `metadata.checkpoint_content`, because the mem9 content write path currently reconciles the visible memory text into an insight.
 
 ---
 

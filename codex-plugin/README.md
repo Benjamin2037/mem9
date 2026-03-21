@@ -10,6 +10,8 @@ This gives Codex a workable answer to the current gap versus Claude Code / OpenC
 - local `codex resume` already exists for same-machine continuation
 - mem9 adds cross-machine shared checkpoints and project memory
 - the launcher adds the startup prompt you wanted without patching Codex itself
+- a history watcher can auto-save a checkpoint when you trigger `/compact` or `/reset`
+- checkpoint raw payload is preserved in `metadata.checkpoint_content`, so restore still works even when mem9 reconciles the visible memory text into an insight
 
 ## What it supports today
 
@@ -18,6 +20,8 @@ This gives Codex a workable answer to the current gap versus Claude Code / OpenC
 - store durable project facts with `mem9_memory_store`
 - search prior facts with `mem9_memory_search`
 - start Codex with a named session or bootstrap a new session from a shared mem9 checkpoint
+- import a Codex transcript snapshot from `~/.codex/sessions`
+- auto-save a session snapshot on `/compact` and `/reset` through a background watcher
 
 ## Prerequisites
 
@@ -65,6 +69,63 @@ The launcher offers:
 
 It also exports `MNEMO_PROJECT` and `MNEMO_SESSION` into the launched Codex process so the MCP tools can default to the active project/session.
 
+## Import a Codex session snapshot
+
+Dry run:
+
+```bash
+cd codex-plugin
+node src/import-session.mjs --last --dry-run
+```
+
+Store a specific session:
+
+```bash
+cd codex-plugin
+node src/import-session.mjs --session-id 019cfe6f-7011-73c1-a0a6-4176207e5f43
+```
+
+Store and wait until the imported checkpoint is visible in mem9:
+
+```bash
+cd codex-plugin
+node src/import-session.mjs --last --wait --wait-ms 20000
+```
+
+The importer reads `~/.codex/sessions/**/*.jsonl`, extracts recent `user_message` and `agent_message` entries, and stores a checkpoint-style memory in mem9.
+If your workspace root has a generic name like `project`, the importer also tries to infer a better project name from recent repo/file references.
+
+## Auto-save on `/compact`
+
+Run the watcher manually:
+
+```bash
+cd codex-plugin
+node src/history-watcher.mjs
+```
+
+What it does:
+
+1. polls `~/.codex/history.jsonl`
+2. detects `/compact` and `/reset`
+3. resolves the corresponding session file
+4. imports a checkpoint snapshot into mem9
+
+Install the macOS launch agent so this starts at login:
+
+```bash
+cd codex-plugin
+node src/install-launch-agent.mjs
+launchctl unload ~/Library/LaunchAgents/com.benjamin2037.codex.mem9-watcher.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.benjamin2037.codex.mem9-watcher.plist
+```
+
+Logs:
+
+```bash
+tail -f ~/.codex/log/mem9-watcher.log
+```
+
 ## Recommended Codex workflow
 
 1. start Codex from the launcher
@@ -72,6 +133,9 @@ It also exports `MNEMO_PROJECT` and `MNEMO_SESSION` into the launched Codex proc
 3. during long work, use `mem9_memory_store` for durable facts, decisions, and environment notes
 4. before compact, handoff, or pause, call `mem9_checkpoint_save`
 5. on another machine, run the launcher and pick a shared checkpoint to bootstrap a fresh Codex session
+6. if the watcher is enabled, `/compact` and `/reset` also create an automatic imported-session checkpoint
+
+Note: mem9's `POST /memories` currently reconciles content into an insight memory. The Codex plugin compensates by storing the full checkpoint text inside `metadata.checkpoint_content`, and the launcher restores from that field.
 
 ## Suggested `AGENTS.md` snippet
 
@@ -105,6 +169,6 @@ These are the main product gaps I found while wiring Codex support:
    - Query search is great for content, but session restore wants first-class filtering on project/session/checkpoint type.
    - Better: expose dedicated restore/list endpoints for recent checkpoints.
 
-5. **No automatic compact hook in Codex**
-   - This is partly a Codex-side limitation today, so the current flow is explicit rather than automatic.
-   - Better: if Codex later exposes lifecycle hooks, mem9 can add parity with the Claude/OpenCode/OpenClaw integrations.
+5. **No first-class Codex lifecycle hook**
+   - The watcher works by monitoring local Codex history, not by a native pre-compact callback.
+   - Better: if Codex exposes official lifecycle hooks, replace the watcher with a true pre-compact / post-resume integration.

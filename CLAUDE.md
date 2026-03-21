@@ -41,6 +41,8 @@ server/schema.sql                   — Database DDL (control plane + tenant dat
 
 codex-plugin/src/index.mjs          — MCP tools for checkpoint save/recall + memory store/search
 codex-plugin/src/launcher.mjs       — Session chooser for named or resumed Codex runs
+codex-plugin/src/import-session.mjs — Import a Codex session transcript into mem9 as a checkpoint
+codex-plugin/src/history-watcher.mjs — Watch `~/.codex/history.jsonl` and auto-save on `/compact` or `/reset`
 
 openclaw-plugin/index.ts            — Tool registration via MemoryBackend interface
 openclaw-plugin/backend.ts          — MemoryBackend interface (store/search/get/update/remove)
@@ -81,6 +83,7 @@ claude-plugin/skills/memory-store/       — On-demand save skill
 - Version increment is atomic in SQL: `SET version = version + 1`
 - Tags stored as JSON column, filtered with `JSON_CONTAINS`; empty tags stored as `[]` (not NULL)
 - **No auth required**: Tenant ID in URL path is the only identification. No Bearer tokens, no API keys.
+- **Codex checkpoint restore**: `POST /memories` reconciles content into insights, so the Codex plugin stores the raw checkpoint body in `metadata.checkpoint_content` and restores from that field.
 
 ## Tenant provisioning
 

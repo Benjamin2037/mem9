@@ -120,6 +120,17 @@ export function buildCheckpointRecord(input) {
   const cwd = String(input.cwd || '').trim();
   const gitBranch = String(input.gitBranch || '').trim();
   const summary = String(input.summary || '').trim();
+  const checkpointContent = buildCheckpointContent({
+    project,
+    session,
+    summary,
+    openLoops,
+    nextSteps,
+    artifacts,
+    cwd,
+    gitBranch,
+    checkpointKind,
+  });
   const metadata = {
     schema: 'mem9.codex.checkpoint.v1',
     agent: 'codex',
@@ -134,6 +145,8 @@ export function buildCheckpointRecord(input) {
     next_steps: nextSteps,
     artifacts,
     labels,
+    checkpoint_summary: summary,
+    checkpoint_content: checkpointContent,
     created_at: new Date().toISOString(),
   };
 
@@ -141,17 +154,7 @@ export function buildCheckpointRecord(input) {
     project,
     session,
     tags: buildTags({ project, session, kind: 'checkpoint', labels: [checkpointKind, ...labels] }),
-    content: buildCheckpointContent({
-      project,
-      session,
-      summary,
-      openLoops,
-      nextSteps,
-      artifacts,
-      cwd,
-      gitBranch,
-      checkpointKind,
-    }),
+    content: checkpointContent,
     metadata,
   };
 }
@@ -202,7 +205,7 @@ export function summarizeMemory(memory) {
   const metadata = parseMetadata(memory) || {};
   const session = metadata.session || 'n/a';
   const updatedAt = memory.updated_at || memory.updatedAt || 'unknown';
-  const content = String(memory.content || '').replace(/\s+/g, ' ').trim();
+  const content = String(metadata.checkpoint_summary || metadata.checkpoint_content || memory.content || '').replace(/\s+/g, ' ').trim();
   return `${session} | ${updatedAt} | ${content.slice(0, 120)}`;
 }
 

@@ -61,6 +61,7 @@ server.registerTool(
     },
     outputSchema: {
       saved: z.boolean(),
+      accepted: z.boolean(),
       memory_id: z.string(),
       project: z.string(),
       session: z.string().nullable(),
@@ -70,16 +71,15 @@ server.registerTool(
   async (input) => {
     try {
       const record = buildCheckpointRecord(input);
-      const response = await client.bulkCreate([
-        {
-          content: record.content,
-          tags: record.tags,
-          metadata: record.metadata,
-        },
-      ]);
-      const memory = response?.memories?.[0];
+      const response = await client.createMemory({
+        content: record.content,
+        tags: record.tags,
+        metadata: record.metadata,
+      });
+      const memory = response?.data;
       return ok({
         saved: true,
+        accepted: response.status === 202,
         memory_id: memory?.id || '',
         project: record.project,
         session: record.session || null,
@@ -164,6 +164,7 @@ server.registerTool(
     },
     outputSchema: {
       saved: z.boolean(),
+      accepted: z.boolean(),
       memory_id: z.string(),
       project: z.string(),
       session: z.string().nullable(),
@@ -173,16 +174,15 @@ server.registerTool(
   async (input) => {
     try {
       const record = buildMemoryRecord(input);
-      const response = await client.bulkCreate([
-        {
-          content: record.content,
-          tags: record.tags,
-          metadata: record.metadata,
-        },
-      ]);
-      const memory = response?.memories?.[0];
+      const response = await client.createMemory({
+        content: record.content,
+        tags: record.tags,
+        metadata: record.metadata,
+      });
+      const memory = response?.data;
       return ok({
         saved: true,
+        accepted: response.status === 202,
         memory_id: memory?.id || '',
         project: record.project,
         session: record.session || null,

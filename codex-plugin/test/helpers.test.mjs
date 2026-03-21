@@ -29,6 +29,8 @@ test('buildCheckpointRecord emits project and checkpoint tags', () => {
   assert.ok(record.tags.includes('session:orr-43'));
   assert.match(record.content, /summary:/);
   assert.equal(record.metadata.project, 'TiForge');
+  assert.equal(record.metadata.checkpoint_content, record.content);
+  assert.match(record.metadata.checkpoint_summary, /Finished the batch report refresh/);
 });
 
 test('buildMemoryRecord carries key metadata', () => {

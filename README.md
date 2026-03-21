@@ -81,7 +81,7 @@ mnemos provides native plugins for major AI coding agent platforms:
 
 | Platform | Plugin | How It Works | Install Guide |
 |---|---|---|---|
-| **Codex** | MCP tools + launcher | Shared checkpoint save/recall, plus a startup chooser for named or resumed sessions | [`codex-plugin/README.md`](codex-plugin/README.md) |
+| **Codex** | MCP tools + launcher + watcher | Shared checkpoint save/recall, startup chooser, and automatic checkpoint import on `/compact` and `/reset` | [`codex-plugin/README.md`](codex-plugin/README.md) |
 | **Claude Code** | Hooks + Skills | Auto-loads memories on session start, auto-saves on stop | [`claude-plugin/README.md`](claude-plugin/README.md) |
 | **OpenCode** | Plugin SDK | `system.transform` injects memories, `session.idle` auto-captures | [`opencode-plugin/README.md`](opencode-plugin/README.md) |
 | **OpenClaw** | Memory Plugin | Replaces built-in memory slot (`kind: "memory"`), framework manages lifecycle | [`openclaw-plugin/README.md`](openclaw-plugin/README.md) |
@@ -107,7 +107,7 @@ Agent identity: `X-Mnemo-Agent-Id` header.
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/v1alpha1/mem9s` | Provision tenant (no auth). Returns `{ "id", "claim_url" }`. |
-| `POST` | `/v1alpha1/mem9s/{tenantID}/memories` | Unified write endpoint: `{content,...}` for direct create or `{messages,...}` for ingest pipeline. |
+| `POST` | `/v1alpha1/mem9s/{tenantID}/memories` | Unified write endpoint: `{content,...}` runs content reconciliation, `{messages,...}` runs conversation ingest. Codex checkpoints preserve the raw checkpoint payload in `metadata.checkpoint_content`. |
 | `GET` | `/v1alpha1/mem9s/{tenantID}/memories` | Search: `?q=`, `?tags=`, `?source=`, `?key=`, `?limit=`, `?offset=` |
 | `GET` | `/v1alpha1/mem9s/{tenantID}/memories/:id` | Get single memory |
 | `PUT` | `/v1alpha1/mem9s/{tenantID}/memories/:id` | Update. Optional `If-Match` for version check. |
