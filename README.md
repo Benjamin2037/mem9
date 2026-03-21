@@ -31,6 +31,7 @@ cd server && MNEMO_DSN="user:pass@tcp(host:4000)/mnemos?parseTime=true" go run .
 
 | Platform | Install |
 |----------|---------|
+| **Codex** | Add the local mem9 MCP server via `codex mcp add mem9 -- node /path/to/codex-plugin/src/index.mjs` |
 | **Claude Code** | `/plugin marketplace add qiffang/mnemos` then `/plugin install mnemo-memory@mnemos` |
 | **OpenCode** | Add `"plugin": ["mnemo-opencode"]` to `opencode.json` |
 | **OpenClaw** | Add `mnemo` to `openclaw.json` plugins (see [openclaw-plugin/README](openclaw-plugin/README.md)) |
@@ -80,6 +81,7 @@ mnemos provides native plugins for major AI coding agent platforms:
 
 | Platform | Plugin | How It Works | Install Guide |
 |---|---|---|---|
+| **Codex** | MCP tools + launcher | Shared checkpoint save/recall, plus a startup chooser for named or resumed sessions | [`codex-plugin/README.md`](codex-plugin/README.md) |
 | **Claude Code** | Hooks + Skills | Auto-loads memories on session start, auto-saves on stop | [`claude-plugin/README.md`](claude-plugin/README.md) |
 | **OpenCode** | Plugin SDK | `system.transform` injects memories, `session.idle` auto-captures | [`opencode-plugin/README.md`](opencode-plugin/README.md) |
 | **OpenClaw** | Memory Plugin | Replaces built-in memory slot (`kind: "memory"`), framework manages lifecycle | [`openclaw-plugin/README.md`](openclaw-plugin/README.md) |
@@ -95,7 +97,7 @@ A key design principle: **agent plugins carry zero state.** All memory lives in 
 
 - **Agent plugins stay stateless** — deploy any number of agent instances freely; they all share the same memory pool via mnemo-server
 - **Switch machines freely** — your agent's memory follows you, not your laptop
-- **Multi-agent collaboration** — Claude Code, OpenCode, OpenClaw, and any HTTP client share memories when pointed at the same server
+- **Multi-agent collaboration** — Codex, Claude Code, OpenCode, OpenClaw, and any HTTP client share memories when pointed at the same server
 - **Centralized control** — rate limits and audit live in one place
 
 ## API Reference
@@ -164,6 +166,10 @@ mnemos/
 ├── openclaw-plugin/            # OpenClaw agent plugin (TypeScript)
 │   ├── index.ts                # Tool registration
 │   └── server-backend.ts       # Server: fetch → mnemo API
+│
+├── codex-plugin/               # Codex MCP server + session launcher
+│   ├── src/index.mjs           # MCP tools: checkpoint save/recall + memory store/search
+│   └── src/launcher.mjs        # Named-session / resume launcher for Codex
 │
 ├── claude-plugin/              # Claude Code plugin (Hooks + Skills)
 │   ├── hooks/                  # Lifecycle hooks (bash + curl)

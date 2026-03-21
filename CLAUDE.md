@@ -6,6 +6,7 @@ mnemos is cloud-persistent memory for AI agents. Plugins connect to mnemo-server
 
 Three components:
 - `server/` — Go REST API (chi router, TiDB/MySQL, optional embedding)
+- `codex-plugin/` — Codex MCP server + session launcher
 - `openclaw-plugin/` — Agent plugin for OpenClaw (server backend)
 - `claude-plugin/` — Claude Code plugin (bash hooks + skills)
 
@@ -37,6 +38,9 @@ server/internal/middleware/         — Tenant resolution (tenantID → DB) + ra
 server/internal/repository/         — Repository interfaces + TiDB SQL (vector + keyword search)
 server/internal/service/            — Business logic: upsert, LWW, hybrid search, embedding on write
 server/schema.sql                   — Database DDL (control plane + tenant data plane)
+
+codex-plugin/src/index.mjs          — MCP tools for checkpoint save/recall + memory store/search
+codex-plugin/src/launcher.mjs       — Session chooser for named or resumed Codex runs
 
 openclaw-plugin/index.ts            — Tool registration via MemoryBackend interface
 openclaw-plugin/backend.ts          — MemoryBackend interface (store/search/get/update/remove)

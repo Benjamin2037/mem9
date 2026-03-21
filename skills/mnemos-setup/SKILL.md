@@ -3,7 +3,7 @@ name: mnemos-setup
 description: |
   Setup mnemos persistent memory with mnemo-server.
   Triggers: "set up mnemos", "install mnemo plugin", "configure memory plugin",
-  "configure openclaw memory", "configure opencode memory",
+  "configure openclaw memory", "configure opencode memory", "configure codex memory",
   "configure claude code memory".
 ---
 
@@ -62,6 +62,40 @@ Restart OpenClaw. You should see:
 ```
 [mnemo] Server mode (tenant-scoped mem9 API)
 ```
+
+---
+
+#### Codex
+
+Set environment variables:
+
+```bash
+export MNEMO_API_URL="http://localhost:8080"
+export MNEMO_TENANT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export MNEMO_AGENT_ID="codex-$(hostname -s)"
+```
+
+Register the local MCP server:
+
+```bash
+cd mnemos/codex-plugin
+npm install
+
+codex mcp add mem9 \
+  --env MNEMO_API_URL="$MNEMO_API_URL" \
+  --env MNEMO_TENANT_ID="$MNEMO_TENANT_ID" \
+  --env MNEMO_AGENT_ID="$MNEMO_AGENT_ID" \
+  -- node /absolute/path/to/mnemos/codex-plugin/src/index.mjs
+```
+
+Optional launcher:
+
+```bash
+cd mnemos/codex-plugin
+node src/launcher.mjs
+```
+
+This gives Codex shared checkpoint save/recall plus a startup chooser for named or resumed sessions.
 
 ---
 

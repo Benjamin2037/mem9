@@ -1,0 +1,16 @@
+{
+  "name": "mnemo-codex-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Codex MCP integration and launcher for mem9 shared memory",
+  "scripts": {
+    "start": "node src/index.mjs",
+    "launcher": "node src/launcher.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  }
+}
