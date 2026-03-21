@@ -12,6 +12,7 @@ This gives Codex a workable answer to the current gap versus Claude Code / OpenC
 - the launcher adds the startup prompt you wanted without patching Codex itself
 - a history watcher can auto-save a checkpoint when you trigger `/compact` or `/reset`
 - checkpoint raw payload is preserved in `metadata.checkpoint_content`, so restore still works even when mem9 reconciles the visible memory text into an insight
+- if `BWS_ROOT` points to a BearWorkSpace checkout, the launcher also injects BearWorkSpace machine/startup context into Codex at launch time
 
 ## What it supports today
 
@@ -68,6 +69,7 @@ The launcher offers:
 3. resume the local Codex session picker
 
 It also exports `MNEMO_PROJECT` and `MNEMO_SESSION` into the launched Codex process so the MCP tools can default to the active project/session.
+If `BWS_ROOT` is configured, it also exports the BearWorkSpace machine env from `codex-bootstrap.mjs`.
 
 ## Import a Codex session snapshot
 
