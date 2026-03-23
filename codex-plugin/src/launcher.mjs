@@ -4,42 +4,13 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import process from 'node:process';
 import { MnemoClient } from './client.mjs';
+import { parseLauncherArgs, resolveCodexBin, splitArgs } from './launcher-helpers.mjs';
 import {
   inferProjectName,
   inferSessionName,
   parseMetadata,
   summarizeMemory,
 } from './helpers.mjs';
-
-function splitArgs(argv) {
-  const divider = argv.indexOf('--');
-  if (divider === -1) {
-    return { launcherArgs: argv, codexArgs: [] };
-  }
-  return {
-    launcherArgs: argv.slice(0, divider),
-    codexArgs: argv.slice(divider + 1),
-  };
-}
-
-function parseLauncherArgs(argv) {
-  const args = { project: '', session: '', localResume: false, printStartup: false };
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (token === '--project' && argv[i + 1]) {
-      args.project = argv[i + 1];
-      i += 1;
-    } else if (token === '--session' && argv[i + 1]) {
-      args.session = argv[i + 1];
-      i += 1;
-    } else if (token === '--local-resume') {
-      args.localResume = true;
-    } else if (token === '--print-startup') {
-      args.printStartup = true;
-    }
-  }
-  return args;
-}
 
 function loadBearWorkspaceBootstrap(project, session = '') {
   const root = String(process.env.BWS_ROOT || '').trim();
@@ -119,7 +90,7 @@ function launchCodex({ codexArgs, prompt, project, session, mode, extraEnv = {} 
   };
 
   const args = mode === 'local-resume' ? ['resume', ...codexArgs] : [...codexArgs, prompt];
-  const child = spawn('codex', args, {
+  const child = spawn(resolveCodexBin(env), args, {
     stdio: 'inherit',
     env,
   });
