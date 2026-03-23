@@ -41,14 +41,19 @@ function parseLauncherArgs(argv) {
   return args;
 }
 
-function loadBearWorkspaceBootstrap(project) {
+function loadBearWorkspaceBootstrap(project, session = '') {
   const root = String(process.env.BWS_ROOT || '').trim();
   if (!root) {
     return { enabled: false, env: {}, startupBlock: '' };
   }
 
   const scriptPath = path.join(root, 'src', 'codex-bootstrap.mjs');
-  const result = spawnSync(process.execPath, [scriptPath, '--workspace', project], {
+  const result = spawnSync(process.execPath, [
+    scriptPath,
+    '--workspace',
+    project,
+    ...(String(session || '').trim() ? ['--session-id', String(session).trim()] : []),
+  ], {
     encoding: 'utf8',
     env: process.env,
   });
@@ -156,7 +161,7 @@ async function main() {
   const args = parseLauncherArgs(launcherArgs);
   const project = inferProjectName(args.project);
   const session = inferSessionName(args.session);
-  const bearContext = loadBearWorkspaceBootstrap(project);
+  const bearContext = loadBearWorkspaceBootstrap(project, session);
 
   if (args.localResume) {
     if (args.printStartup) {
