@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/qiffang/mnemos/server/internal/domain"
@@ -80,7 +81,9 @@ func NewTenantService(
 
 // ProvisionResult is the output of Provision.
 type ProvisionResult struct {
-	ID string `json:"id"`
+	ID             string     `json:"id"`
+	ClaimURL       string     `json:"claim_url,omitempty"`
+	ClaimExpiresAt *time.Time `json:"claim_expires_at,omitempty"`
 }
 
 // Provision creates a new TiDB Zero instance and registers it as a tenant.
@@ -133,7 +136,9 @@ func (s *TenantService) Provision(ctx context.Context) (*ProvisionResult, error)
 	}
 
 	return &ProvisionResult{
-		ID: tenantID,
+		ID:             tenantID,
+		ClaimURL:       instance.ClaimURL,
+		ClaimExpiresAt: instance.ClaimExpiresAt,
 	}, nil
 }
 

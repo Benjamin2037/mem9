@@ -39,7 +39,7 @@ cd server && MNEMO_DSN="user:pass@tcp(host:4000)/mnemos?parseTime=true" go run .
 ```bash
 # 3. Provision a tenant and set credentials
 curl -s -X POST localhost:8080/v1alpha1/mem9s
-# → {"id":"...", "claim_url":"..."}
+# → {"id":"...", "claim_url":"...", "claim_expires_at":"..."}
 
 export MNEMO_API_URL="http://localhost:8080"
 export MNEMO_TENANT_ID="..."

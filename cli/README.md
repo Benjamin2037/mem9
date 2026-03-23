@@ -34,7 +34,7 @@ mnemo -u http://localhost:8080 -t your-tenant-id -a my-agent <command>
 
 ```bash
 mnemo provision
-# Returns: {"id": "uuid", "claim_url": "..."}
+# Returns: {"id": "uuid", "claim_url": "...", "claim_expires_at": "..."}
 ```
 
 ### Memory Operations
